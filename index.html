@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NeonLink | Ins动态导航</title>
     <style>
+        /* 全局点击优化 */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+        }
+
         :root {
             --primary: #87CEEB;
             --secondary: #FFB6C1;
@@ -20,18 +26,56 @@
                 var(--secondary) 80%
             );
             background-size: 400% 400%;
-            animation: GradientFlow 15s ease infinite;
+            animation: GradientFlow 25s linear infinite;
             font-family: 'Segoe UI', system-ui;
             position: relative;
+            overflow-x: hidden;
         }
 
         @keyframes GradientFlow {
-            0% { background-position: 0% 50% }
+            0%, 100% { background-position: 0% 50% }
             50% { background-position: 100% 50% }
-            100% { background-position: 0% 50% }
         }
 
-        /* 卡片容器优化 */
+        /* 光斑动画优化 */
+        body::after {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 75% 25%, 
+                    rgba(255,255,255,0.1) 0%, 
+                    transparent 50%),
+                radial-gradient(circle at 25% 75%, 
+                    rgba(255,255,255,0.08) 0%, 
+                    transparent 50%);
+            animation: Ripple 40s linear infinite;
+            z-index: -1;
+            will-change: transform;
+        }
+
+        @keyframes Ripple {
+            from { transform: rotate(0deg) scale(1) }
+            50% { transform: rotate(180deg) scale(1.2) }
+            to { transform: rotate(360deg) scale(1) }
+        }
+
+        .glass-layer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                135deg,
+                rgba(255,255,255,0.25) 0%,
+                rgba(255,255,255,0.15) 100%
+            );
+            backdrop-filter: blur(15px);
+            pointer-events: none;
+        }
+
         .nav-container {
             max-width: 1200px;
             margin: 2rem auto;
@@ -43,19 +87,23 @@
             z-index: 1;
         }
 
-        /* 卡片跳转优化  <Ref>1</Ref>   <Ref>5</Ref>  */
+        /* 卡片优化 */
         .nav-card {
-            display: block; /* 改为块级元素 */
-            text-decoration: none; /* 去除下划线 */
-            color: inherit; /* 继承文字颜色 */
+            display: block;
+            text-decoration: none;
+            color: inherit;
             background: rgba(255,255,255,0.85);
             border-radius: 20px;
             padding: 2rem;
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), 
+                       box-shadow 0.4s ease,
+                       background 0.3s ease;
             cursor: pointer;
             position: relative;
             overflow: hidden;
             border: 1px solid rgba(255,255,255,0.3);
+            transform: translateZ(0);
+            backface-visibility: hidden;
         }
 
         .nav-card::before {
@@ -71,11 +119,12 @@
                 rgba(255,255,255,0.05) 100%
             );
             transform: rotate(30deg);
-            transition: all 0.6s ease;
+            transition: top 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: top;
         }
 
         .nav-card:hover {
-            transform: translateY(-8px) scale(1.02);
+            transform: translateY(-8px) scale(1.02) translateZ(0);
             box-shadow: 0 15px 40px rgba(0,0,0,0.1);
         }
 
@@ -83,14 +132,22 @@
             top: -50%;
         }
 
-        /* 删除按钮相关样式 */
+        h3 {
+            margin: 0 0 1rem;
+            color: #2c3e50;
+        }
+
+        p {
+            margin: 0;
+            color: #666;
+            line-height: 1.6;
+        }
     </style>
 </head>
 <body>
     <div class="glass-layer"></div>
     
     <div class="nav-container">
-        <!-- 卡片改为链接  <Ref>1</Ref>  -->
         <a href="https://instagram.com" class="nav-card" target="_blank">
             <h3>📸 Instagram</h3>
             <p>视觉灵感聚集地</p>
@@ -103,7 +160,15 @@
     </div>
 
     <script>
-        // 删除按钮相关交互代码
+        // 防止双击选中文本
+        document.addEventListener('mousedown', (e) => {
+            if (e.detail > 1) e.preventDefault();
+        }, false);
+
+        // 优化动画性能
+        requestAnimationFrame(() => {
+            document.body.style.visibility = 'visible';
+        });
     </script>
 </body>
 </html>
