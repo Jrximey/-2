@@ -5,15 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NeonLink | Ins动态导航</title>
     <style>
-        /* 新增全局点击优化  <Ref>1</Ref>   <Ref>5</Ref>  */
-        html {
-            -webkit-tap-highlight-color: transparent;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-        }
-
         :root {
             --primary: #87CEEB;
             --secondary: #FFB6C1;
@@ -28,58 +19,19 @@
                 var(--primary) 20%,
                 var(--secondary) 80%
             );
-            background-size: 200% 200%; /* 优化背景尺寸减少重绘  <Ref>3</Ref>  */
-            animation: GradientFlow 25s linear infinite; /* 延长动画时间 */
+            background-size: 400% 400%;
+            animation: GradientFlow 15s ease infinite;
             font-family: 'Segoe UI', system-ui;
             position: relative;
-            overflow-x: hidden;
         }
 
         @keyframes GradientFlow {
-            0%, 100% { background-position: 0% 50% }
+            0% { background-position: 0% 50% }
             50% { background-position: 100% 50% }
+            100% { background-position: 0% 50% }
         }
 
-        /* 优化光斑动画性能  <Ref>7</Ref>  */
-        body::after {
-            content: '';
-            position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: 
-                radial-gradient(circle at 75% 25%, 
-                    rgba(255,255,255,0.1) 0%, 
-                    transparent 50%),
-                radial-gradient(circle at 25% 75%, 
-                    rgba(255,255,255,0.08) 0%, 
-                    transparent 50%);
-            animation: Ripple 40s linear infinite;
-            z-index: -1;
-            will-change: transform; /* GPU加速 */
-        }
-
-        @keyframes Ripple {
-            from { transform: rotate(0deg) scale(1) }
-            50% { transform: rotate(180deg) scale(1.2) }
-            to { transform: rotate(360deg) scale(1) }
-        }
-
-        .glass-layer {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                135deg,
-                rgba(255,255,255,0.25) 0%,
-                rgba(255,255,255,0.15) 100%
-            );
-            backdrop-filter: blur(15px);
-            pointer-events: none;
-            will-change: backdrop-filter; /* 预优化 */
-        }
-
+        /* 卡片容器优化 */
         .nav-container {
             max-width: 1200px;
             margin: 2rem auto;
@@ -91,8 +43,11 @@
             z-index: 1;
         }
 
-        /* 卡片优化  <Ref>6</Ref>  */
+        /* 卡片跳转优化  <Ref>1</Ref>   <Ref>5</Ref>  */
         .nav-card {
+            display: block; /* 改为块级元素 */
+            text-decoration: none; /* 去除下划线 */
+            color: inherit; /* 继承文字颜色 */
             background: rgba(255,255,255,0.85);
             border-radius: 20px;
             padding: 2rem;
@@ -101,8 +56,6 @@
             position: relative;
             overflow: hidden;
             border: 1px solid rgba(255,255,255,0.3);
-            transform: translateZ(0); /* 启用GPU加速 */
-            backface-visibility: hidden; /* 修复闪烁 */
         }
 
         .nav-card::before {
@@ -122,7 +75,7 @@
         }
 
         .nav-card:hover {
-            transform: translateY(-8px) scale(1.02) translateZ(0);
+            transform: translateY(-8px) scale(1.02);
             box-shadow: 0 15px 40px rgba(0,0,0,0.1);
         }
 
@@ -130,93 +83,27 @@
             top: -50%;
         }
 
-        /* 按钮优化  <Ref>2</Ref>   <Ref>9</Ref>  */
-        .gradient-btn {
-            display: inline-block;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 25px;
-            background: linear-gradient(
-                45deg, 
-                var(--primary) 0%,
-                var(--secondary) 100%
-            );
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-            outline: none !important; /* 去除轮廓  <Ref>6</Ref>  */
-        }
-
-        .gradient-btn::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(
-                45deg,
-                transparent 20%,
-                rgba(255,255,255,0.15) 50%,
-                transparent 80%
-            );
-            transform: rotate(30deg);
-            animation: Shine 3s infinite;
-            backface-visibility: hidden;
-        }
-
-        @keyframes Shine {
-            0% { transform: translateX(-150%) rotate(30deg) }
-            100% { transform: translateX(150%) rotate(30deg) }
-        }
+        /* 删除按钮相关样式 */
     </style>
 </head>
 <body>
     <div class="glass-layer"></div>
     
     <div class="nav-container">
-        <div class="nav-card">
-            <h3>•͈ᴗ•͈ ♡ Eeay-Cat-Timer</h3>
-            <p>猫猫计时器</p>
-                   <a href="https://cn.easycattimer.com/">访问</a>
-        </div>
-        
-        <div class="nav-card">
-            <h3>⌯'▾'⌯ Learnlish</h3>
-            <p>英语口语学习</p>
-            <button href="https://www.lingobell.fun/">访问</button>
-        </div>
-        <div class="nav-card">
-            <h3>· ᴥ · Listening</h3>
-            <p>猫看白噪音</p>
-            <button class="https://www.maokan.cc/>访问</button>
-        </div>
+        <!-- 卡片改为链接  <Ref>1</Ref>  -->
+        <a href="https://instagram.com" class="nav-card" target="_blank">
+            <h3>📸 Instagram</h3>
+            <p>视觉灵感聚集地</p>
+        </a>
+
+        <a href="https://spotify.com" class="nav-card" target="_blank">
+            <h3>🎵 Spotify</h3>
+            <p>发现新音乐</p>
+        </a>
     </div>
 
     <script>
-        // 优化交互性能
-        document.querySelectorAll('.gradient-btn').forEach(btn => {
-            btn.addEventListener('mousedown', () => {
-                btn.style.transform = 'scale(0.95) translateZ(0)';
-                btn.style.filter = 'brightness(0.9)';
-            });
-            btn.addEventListener('mouseup', () => {
-                btn.style.transform = 'scale(1) translateZ(0)';
-                btn.style.filter = 'brightness(1)';
-            });
-            btn.addEventListener('mouseleave', () => {
-                btn.style.transform = 'scale(1) translateZ(0)';
-                btn.style.filter = 'brightness(1)';
-            });
-        });
-
-        // 防止双击选中文本
-        document.addEventListener('mousedown', (e) => {
-            if (e.detail > 1) e.preventDefault();
-        }, false);
+        // 删除按钮相关交互代码
     </script>
 </body>
 </html>
