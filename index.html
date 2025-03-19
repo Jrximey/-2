@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeonLink | Ins动态导航</title>
+    <style>
+        /* 新增全局点击优化  <Ref>1</Ref>   <Ref>5</Ref>  */
+        html {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        :root {
+            --primary: #87CEEB;
+            --secondary: #FFB6C1;
+            --gradient-angle: 135deg;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(
+                var(--gradient-angle),
+                var(--primary) 20%,
+                var(--secondary) 80%
+            );
+            background-size: 200% 200%; /* 优化背景尺寸减少重绘  <Ref>3</Ref>  */
+            animation: GradientFlow 25s linear infinite; /* 延长动画时间 */
+            font-family: 'Segoe UI', system-ui;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        @keyframes GradientFlow {
+            0%, 100% { background-position: 0% 50% }
+            50% { background-position: 100% 50% }
+        }
+
+        /* 优化光斑动画性能  <Ref>7</Ref>  */
+        body::after {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 75% 25%, 
+                    rgba(255,255,255,0.1) 0%, 
+                    transparent 50%),
+                radial-gradient(circle at 25% 75%, 
+                    rgba(255,255,255,0.08) 0%, 
+                    transparent 50%);
+            animation: Ripple 40s linear infinite;
+            z-index: -1;
+            will-change: transform; /* GPU加速 */
+        }
+
+        @keyframes Ripple {
+            from { transform: rotate(0deg) scale(1) }
+            50% { transform: rotate(180deg) scale(1.2) }
+            to { transform: rotate(360deg) scale(1) }
+        }
+
+        .glass-layer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                135deg,
+                rgba(255,255,255,0.25) 0%,
+                rgba(255,255,255,0.15) 100%
+            );
+            backdrop-filter: blur(15px);
+            pointer-events: none;
+            will-change: backdrop-filter; /* 预优化 */
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 卡片优化  <Ref>6</Ref>  */
+        .nav-card {
+            background: rgba(255,255,255,0.85);
+            border-radius: 20px;
+            padding: 2rem;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.3);
+            transform: translateZ(0); /* 启用GPU加速 */
+            backface-visibility: hidden; /* 修复闪烁 */
+        }
+
+        .nav-card::before {
+            content: '';
+            position: absolute;
+            top: -150%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg, 
+                rgba(255,255,255,0.1) 0%,
+                rgba(255,255,255,0.05) 100%
+            );
+            transform: rotate(30deg);
+            transition: all 0.6s ease;
+        }
+
+        .nav-card:hover {
+            transform: translateY(-8px) scale(1.02) translateZ(0);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+        }
+
+        .nav-card:hover::before {
+            top: -50%;
+        }
+
+        /* 按钮优化  <Ref>2</Ref>   <Ref>9</Ref>  */
+        .gradient-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            background: linear-gradient(
+                45deg, 
+                var(--primary) 0%,
+                var(--secondary) 100%
+            );
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            outline: none !important; /* 去除轮廓  <Ref>6</Ref>  */
+        }
+
+        .gradient-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent 20%,
+                rgba(255,255,255,0.15) 50%,
+                transparent 80%
+            );
+            transform: rotate(30deg);
+            animation: Shine 3s infinite;
+            backface-visibility: hidden;
+        }
+
+        @keyframes Shine {
+            0% { transform: translateX(-150%) rotate(30deg) }
+            100% { transform: translateX(150%) rotate(30deg) }
+        }
+    </style>
+</head>
+<body>
+    <div class="glass-layer"></div>
+    
+    <div class="nav-container">
+        <div class="nav-card">
+            <h3>📸 Instagram</h3>
+            <p>视觉灵感聚集地</p>
+            <button class="gradient-btn">访问</button>
+        </div>
+        
+        <div class="nav-card">
+            <h3>🎵 Spotify</h3>
+            <p>发现新音乐</p>
+            <button class="gradient-btn">访问</button>
+        </div>
+    </div>
+
+    <script>
+        // 优化交互性能
+        document.querySelectorAll('.gradient-btn').forEach(btn => {
+            btn.addEventListener('mousedown', () => {
+                btn.style.transform = 'scale(0.95) translateZ(0)';
+                btn.style.filter = 'brightness(0.9)';
+            });
+            btn.addEventListener('mouseup', () => {
+                btn.style.transform = 'scale(1) translateZ(0)';
+                btn.style.filter = 'brightness(1)';
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.transform = 'scale(1) translateZ(0)';
+                btn.style.filter = 'brightness(1)';
+            });
+        });
+
+        // 防止双击选中文本
+        document.addEventListener('mousedown', (e) => {
+            if (e.detail > 1) e.preventDefault();
+        }, false);
+    </script>
+</body>
+</html>
